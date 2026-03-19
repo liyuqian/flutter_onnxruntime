@@ -66,6 +66,8 @@ endif()
 if(NOT USE_SYSTEM_ONNXRUNTIME)
   include(FetchContent)
 
+  option(ONNXRUNTIME_USE_CUDA "Download the CUDA-enabled (GPU) ONNX Runtime build" OFF)
+
   # Set ONNX Runtime version - make sure this is defined Only set if not already defined, to allow the parent project to
   # override it
   if(NOT DEFINED ONNXRUNTIME_VERSION)
@@ -97,10 +99,19 @@ if(NOT USE_SYSTEM_ONNXRUNTIME)
     message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
   endif()
 
-  # Set download URL with correct naming pattern for 1.22.0 Make sure all parts of the version are included
+  if(ONNXRUNTIME_USE_CUDA)
+    set(ONNXRUNTIME_GPU_SUFFIX "-gpu")
+    message(STATUS "CUDA-enabled ONNX Runtime build selected")
+  else()
+    set(ONNXRUNTIME_GPU_SUFFIX "")
+  endif()
+
+  set(ONNXRUNTIME_DIR_NAME "onnxruntime-linux-${ONNXRUNTIME_ARCH}${ONNXRUNTIME_GPU_SUFFIX}-${ONNXRUNTIME_VERSION}")
+
+  # Set download URL with correct naming pattern
   message(STATUS "Using ONNX Runtime version: ${ONNXRUNTIME_VERSION}")
   set(ONNXRUNTIME_URL
-      "https://github.com/microsoft/onnxruntime/releases/download/v${ONNXRUNTIME_VERSION}/onnxruntime-linux-${ONNXRUNTIME_ARCH}-${ONNXRUNTIME_VERSION}.tgz"
+      "https://github.com/microsoft/onnxruntime/releases/download/v${ONNXRUNTIME_VERSION}/${ONNXRUNTIME_DIR_NAME}.tgz"
   )
 
   message(STATUS "Downloading ONNX Runtime from: ${ONNXRUNTIME_URL}")
@@ -109,10 +120,7 @@ if(NOT USE_SYSTEM_ONNXRUNTIME)
   set(ONNXRUNTIME_DOWNLOAD_DIR "${CMAKE_CURRENT_BINARY_DIR}/onnxruntime")
 
   # Download and extract ONNX Runtime - using file(DOWNLOAD) for more direct control
-  if(NOT
-     EXISTS
-     "${ONNXRUNTIME_DOWNLOAD_DIR}/onnxruntime-linux-${ONNXRUNTIME_ARCH}-${ONNXRUNTIME_VERSION}/include/onnxruntime_cxx_api.h"
-  )
+  if(NOT EXISTS "${ONNXRUNTIME_DOWNLOAD_DIR}/${ONNXRUNTIME_DIR_NAME}/include/onnxruntime_cxx_api.h")
     message(STATUS "Downloading ONNX Runtime...")
     file(MAKE_DIRECTORY ${ONNXRUNTIME_DOWNLOAD_DIR})
 
@@ -130,8 +138,7 @@ if(NOT USE_SYSTEM_ONNXRUNTIME)
   endif()
 
   # Set paths to the extracted files
-  set(ONNXRUNTIME_EXTRACT_DIR
-      "${ONNXRUNTIME_DOWNLOAD_DIR}/onnxruntime-linux-${ONNXRUNTIME_ARCH}-${ONNXRUNTIME_VERSION}")
+  set(ONNXRUNTIME_EXTRACT_DIR "${ONNXRUNTIME_DOWNLOAD_DIR}/${ONNXRUNTIME_DIR_NAME}")
 
   # Verify the directory exists
   if(NOT EXISTS ${ONNXRUNTIME_EXTRACT_DIR})
