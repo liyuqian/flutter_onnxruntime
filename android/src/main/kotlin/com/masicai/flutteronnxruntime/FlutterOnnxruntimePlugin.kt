@@ -451,8 +451,7 @@ class FlutterOnnxruntimePlugin : FlutterPlugin, MethodCallHandler {
                                             }
                                         }
                                     }
-                                    outputValue is OnnxTensor -> outputValue
-                                    else -> null
+                                    else -> (outputValue as Any?) as? OnnxTensor
                                 }
 
                             if (outputTensor != null) {
@@ -1147,8 +1146,7 @@ class FlutterOnnxruntimePlugin : FlutterPlugin, MethodCallHandler {
                                     }
                                 }
                             }
-                            outputValue is OnnxTensor -> outputValue
-                            else -> null
+                            else -> (outputValue as Any?) as? OnnxTensor
                         }
 
                         if (outputTensor != null) {
